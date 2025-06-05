@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend1:
+    image: aminetheslime/backend-gateway:latest
+    ports:
+      - 3000:3000
+
+  backend2:
+    image: aminetheslime/backend-first-service:latest
+    ports:
+      - 3001:3001
+
+  backend3:
+    image: aminetheslime/backend-service-list:latest
+    ports:
+      - 3002:3002
+
+  frontend:
+    image: aminetheslime/frontend-app:latest
+    ports:
+      - 8000:80
+
+  pocketbase:
+    image: aminetheslime/pocketbase-image:latest
+    ports:
+      - 8080:8080

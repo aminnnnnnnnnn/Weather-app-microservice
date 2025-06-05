@@ -1,0 +1,55 @@
+
+stages:
+  - build
+  - deploy
+  - deploy_cloud_platform
+
+variables:
+  DOCKER_REGISTRY: git-registry.thm.de
+  DOCKER_IMAGE_NAME: amine/backend-gateway-service
+
+build:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - echo "Building Docker image..."
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $DOCKER_REGISTRY
+    - docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME .
+    - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME
+
+deploy:
+  stage: deploy
+  image: docker:19.03.1
+  services:
+    - docker:19.03.1-dind
+  before_script:
+    - export DOCKER_REGISTRY_USER=$CI_REGISTRY_USER
+    - export DOCKER_REGISTRY_PASSWORD=$CI_REGISTRY_PASSWORD
+    - export DOCKER_REGISTRY_URL=$CI_REGISTRY
+    - export COMMIT_HASH=$CI_COMMIT_SHA
+    - export IMAGE_NAME_WITH_REGISTRY_PREFIX=$CI_REGISTRY_IMAGE
+    - docker login -u "$DOCKER_REGISTRY_USER" -p "$DOCKER_REGISTRY_PASSWORD" $DOCKER_REGISTRY_URL
+  script:
+    - echo "Deploying on CapRover..."
+    - docker run caprover/cli-caprover:v2.1.1 caprover deploy --caproverUrl http://cloud2.mni.thm.de:3000 --caproverPassword glpat-jjdYKJeaY4V9-qEYxHfa --caproverApp gateway-app --imageName $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$COMMIT_HASH
+  only:
+    - master
+
+
+
+    
+deploy_cloud_platform:
+  stage: deploy_cloud_platform
+  only:
+    - master # This pipeline stage will run on this branch alone
+
+  image: google/cloud-sdk # We'll use Google Cloud SDK for Cloud Run related commands
+  script:
+    - echo $GCP_SERVICE_ACCOUNT > gcloud-service-key.json # Save Google cloud contents in a temporary json file
+    - gcloud auth activate-service-account --key-file gcloud-service-key.json # Activate your service account
+    - gcloud auth configure-docker # Configure docker environment
+    - gcloud config set project $GCP_PROJECT_ID #Set the GCP Project ID to the variable name
+    - gcloud builds submit --tag gcr.io/$GCP_PROJECT_ID/$SERVICE_NAME #Run the gcloud build command to build our image
+    - gcloud run deploy $SERVICE_NAME --image gcr.io/$GCP_PROJECT_ID/$SERVICE_NAME --region=us-east4 --platform managed --allow-unauthenticated # Run the gcloud run deploy command to deploy our new service

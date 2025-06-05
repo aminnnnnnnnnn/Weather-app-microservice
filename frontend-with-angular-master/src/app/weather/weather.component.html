@@ -1,0 +1,31 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="text-center my-4">Search for Weather:</h3>
+      <form>
+        <div class="input-group mb-3">
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Action</a></li>
+            <li><a class="dropdown-item" href="#">Another action</a></li>
+            <li><a class="dropdown-item" href="#">Something else here</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Separated link</a></li>
+          </ul>
+          <input [(ngModel)]="location" name="location" type="text" class="form-control" placeholder="location" aria-label="location" aria-describedby="basic-addon1">
+        </div>
+        <div class="text-center">
+          <button (click)="setLocation(location)" type="button" class="btn btn-success btn-md">
+            Search for the weather
+          </button>
+        </div>
+      </form>
+    </div>
+    <div class="col-md-6">
+      <h3 class="text-center my-4">Main weather description: {{weatherResponse.weather }}</h3>
+      <h3 class="text-center my-4">Temperature : {{weatherResponse.temperature}}</h3>
+      <h3 class="text-center my-4">Wind speed:  {{weatherResponse.windSpeed}}</h3>
+      <h3 class="text-center my-4">description : {{weatherResponse.description}}</h3>
+
+    </div>
+  </div>
+</div>
